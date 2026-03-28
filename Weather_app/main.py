@@ -72,36 +72,50 @@ class WeatherApp(QWidget):
     def get_weather(self):
         city_name = self.cityinput.text()
         api_key = "your own api-key, copy-paste here" # you need to enter your own api-key from https://openweathermap.org/api
-        response1 = requests.get(f"http://api.openweathermap.org/geo/1.0/direct?q={city_name}&appid={api_key}")
+
         try:
-            response1.raise_for_status() # HTTP error yakalaması için bu şart.
+            response1 = requests.get(f"http://api.openweathermap.org/geo/1.0/direct?q={city_name}&appid={api_key}")
+            response1.raise_for_status()
             data_ilk = response1.json()
             lat = data_ilk[0]["lat"]
-            lon = data_ilk[0]["lon"]        
+            lon = data_ilk[0]["lon"]
+
             response2 = requests.get(f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}")
-            response2.raise_for_status()  # HTTP error yakalaması için bu şart.
-            stat_code = response1.status_code
+            response2.raise_for_status()
             data_son = response2.json()
+
             weather_descript = data_son["weather"][0]["description"]
             weather_id = data_son["weather"][0]["id"]
-            self.display_weather(data_son)
-            if stat_code == 200:
-                self.description_label.setText(weather_descript)
-                self.emoji_label.setText(self.display_emoji(weather_id))
+
         except IndexError:
-            self.display_error("Hatali tuşlama.")
+            self.display_error("Invalid City name.")
+            return
         except requests.exceptions.HTTPError as http_err:   
-            WeatherApp.error_message(response1.status_code)
+            self.error_message(http_err.response.status_code)
+            return
         except requests.exceptions.ConnectionError:
             self.display_error("Connection-Error:\nPlease check your internet connection. ")
+            return
         except requests.exceptions.ConnectTimeout:
             self.display_error("Connect-Timeout:\nConnection timed out. Please Try again. ")
+            return
         except requests.exceptions.TooManyRedirects:
             self.display_error("Too-Many-Redirects:\nPlease check your URL. ")
-        except requests.exceptions.RequestException:
-            self.display_error(f"A Request error occured:\n{http_err}")
+            return
+        except requests.exceptions.RequestException as e:
+            self.display_error(f"A Request error occured:\n{e}")
+            return
+        except UnboundLocalError:
+            self.display_error("Could'nt get a value:\nPlease check your api-key")
+            return
+
+        self.description_label.setText(weather_descript)
+        self.emoji_label.setText(self.display_emoji(weather_id))
+        self.display_weather(data_son)
+
     def display_error(self,message):            
         self.temperature_label.setText(message)
+
     def error_message(self,stat_code):
         match stat_code:
             case x if x // 100 == 3:
@@ -109,7 +123,8 @@ class WeatherApp(QWidget):
             case x if x // 100 == 4:
                 self.display_error("Client issues,\nMight be due to missinput or unauthorized api-key.")
             case x if x // 100 == 5:
-                self.display_error("Server issues,\nThis error is due to server-side\nPlease try again later.")    
+                self.display_error("Server issues,\nThis error is due to server-side\nPlease try again later.")
+
     def display_weather(self, data_son):
         tempk = data_son["main"]["temp"]
         tempc = tempk -273.15
