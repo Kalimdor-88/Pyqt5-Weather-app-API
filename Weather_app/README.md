@@ -11,4 +11,9 @@ first sign-up and then get to your api-key section via your profile picture
 
 activate it and copy-paste it to your "api-key" section in main.py
 
+
 This Program made with Python 3.11.0 version.
+
+Natural shot(Photo): Muneeb h.hashmi, used under CC BY-SA 4.0.
+
+Home.png made by yusukekamiyamane https://p.yusukekamiyamane.com/ used under  Creative Commons Attribution 3.0 License
